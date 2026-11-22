@@ -1,8 +1,8 @@
-name: language stats
+name: stats
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 9 * * *"
   workflow_dispatch:
   repository_dispatch:
     types: [update-stats]
@@ -11,23 +11,36 @@ permissions:
   contents: write
 
 jobs:
-  update:
+  metrics:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: stats-organization/github-readme-stats-action@v2
+      - uses: lowlighter/metrics@v3.34
         with:
-          card: top-langs
-          options: username=${{ github.repository_owner }}&layout=compact&langs_count=8&hide_border=true&hide=jupyter%20notebook
-          path: profile/top-langs.svg
+          filename: profile/languages.svg
           token: ${{ secrets.STATS_TOKEN }}
+          committer_token: ${{ github.token }}
+          committer_message: update stats
+          output_action: commit
+          base: ""
+          repositories_forks: no
+          commits_authoring: karriechey, 155341695+karriechey@users.noreply.github.com, karriechey@gmail.com, robot@pi.local
+          plugin_languages: yes
+          plugin_languages_indepth: yes
+          plugin_languages_analysis_timeout: 30
+          plugin_languages_sections: most-used, recently-used
+          plugin_languages_details: percentage
+          plugin_languages_limit: 8
+          plugin_languages_colors: github
+          plugin_languages_ignored: jupyter notebook
 
-      - name: commit card
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add profile/top-langs.svg
-          git diff --cached --quiet && exit 0
-          git commit -m "update language stats"
-          git push
+      - uses: lowlighter/metrics@v3.34
+        with:
+          filename: profile/calendar.svg
+          token: ${{ secrets.STATS_TOKEN }}
+          committer_token: ${{ github.token }}
+          committer_message: update stats
+          output_action: commit
+          base: ""
+          plugin_isocalendar: yes
+          plugin_isocalendar_duration: full-year
