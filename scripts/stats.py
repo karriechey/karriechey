@@ -1,4 +1,4 @@
-# Created 2026-11-21. Last updated 2026-11-21.
+# Created 2026-11-21. Last updated 2026-11-22.
 import json
 import os
 import urllib.error
@@ -7,6 +7,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FONT_FILE = ROOT / "scripts" / "fonts" / "barlow-condensed.b64"
+COLORS = json.loads((ROOT / "scripts" / "colors.json").read_text())
+FALLBACK_COLOR = "#8b949e"
 API = "https://api.github.com"
 IGNORED = {"Jupyter Notebook"}
 MAX_LANGUAGES = 8
@@ -24,13 +26,11 @@ THEMES = {
         "text": "#0b1f3a",
         "percent": "#5b6b85",
         "hairline": "#d0d7de",
-        "scale": ["#0b1f3a", "#1f3d6b", "#33598f", "#5577ab", "#7d97c2", "#a9bcda", "#d3deee"],
     },
     "dark": {
         "text": "#ffffff",
         "percent": "#8b98b0",
         "hairline": "#30363d",
-        "scale": ["#ffffff", "#9fb7dd", "#5d7fb8", "#3d5f99", "#2b4675", "#223657", "#1a2840"],
     },
 }
 
@@ -74,20 +74,6 @@ def shares(totals):
     return rows
 
 
-def scale_colors(scale, count):
-    if count <= len(scale):
-        return scale[:count]
-    rgb = [tuple(int(hex_color[i:i + 2], 16) for i in (1, 3, 5)) for hex_color in scale]
-    colors = []
-    for index in range(count):
-        position = index * (len(scale) - 1) / (count - 1)
-        low = min(int(position), len(scale) - 2)
-        fraction = position - low
-        mixed = (round(a + (b - a) * fraction) for a, b in zip(rgb[low], rgb[low + 1]))
-        colors.append("#" + "".join(f"{channel:02x}" for channel in mixed))
-    return colors
-
-
 def font_faces():
     faces = []
     for line in FONT_FILE.read_text().split("\n"):
@@ -101,7 +87,7 @@ def font_faces():
 
 
 def render(rows, theme):
-    colors = scale_colors(theme["scale"], len(rows))
+    colors = [COLORS.get(name, FALLBACK_COLOR) for name, _ in rows]
     usable = WIDTH - BAR_GAP * (len(rows) - 1)
     parts = []
 
